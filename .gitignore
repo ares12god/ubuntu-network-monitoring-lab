@@ -1,0 +1,13 @@
+
+gitignore
+
+# Monitoring logs
+logs/
+*.log
+
+# Backup scripts
+scripts/*-backup.sh
+
+# Temporary files
+*.tmp
+*.swp
