@@ -1,0 +1,20 @@
+UBUNTU NETWORK BASELINE
+=======================
+
+Date: October 6, 2026
+
+Ubuntu IP Address: 192.168.64.2
+Default Gateway: 192.168.64.1
+Network Interface: enp0s1
+
+Gateway Connectivity:
+Packet Loss: 0%
+
+Internet Connectivity:
+Packet Loss: 0%
+
+DNS Connectivity:
+google.com reachable: Yes
+
+Status:
+Network operating normally.
