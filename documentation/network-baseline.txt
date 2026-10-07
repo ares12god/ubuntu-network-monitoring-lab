@@ -3,8 +3,8 @@ UBUNTU NETWORK BASELINE
 
 Date: October 6, 2026
 
-Ubuntu IP Address: 192.168.64.2
-Default Gateway: 192.168.64.1
+Ubuntu IP Address: 192.0.2.10 (example)
+Default Gateway: 192.0.2.1 (example)
 Network Interface: enp0s1
 
 Gateway Connectivity:
