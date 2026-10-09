@@ -27,3 +27,13 @@
 **Resolution:** Installed GitHub CLI and authenticated successfully.
 
 **Lesson Learned:** GitHub CLI simplifies secure Git authentication.
+
+## Issue 4: Simulated Internet Outage Test
+
+**Problem:** Needed to verify that the monitoring script could detect and report a complete Internet outage.
+
+**Cause:** A simulated outage was created by pinging the reserved test IP address 192.0.2.1.
+
+**Resolution:** The script detected 100% packet loss, classified the connection as OFFLINE, generated an alert, and recorded the diagnosis. Seperate tes logs were used.
+
+**Lesson Learned:** Testing failure scenarios helps verify monitoring accuracy and ensures alerts work correctly.
