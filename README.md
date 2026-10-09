@@ -41,3 +41,15 @@ Built an automated network monitoring system using Ubuntu Linux and Bash scripti
 - Email notifications
 - Historical performance reporting
 - Additional network monitoring targets
+
+## Troubleshooting Experience
+
+During developement, I diagnosed and resolved several technical issues:
+
+- Corrected Bash script logic that incorrectly reported packet loss.
+- Fixed Linux file paths that prevented alert logs from being created.
+- Troubleshot GitHub authentication failures using GitHub CLI.
+
+These challenges strengthened my Linux troubleshooting, scripting, and problem-solving skills.
+
+For detailed troubleshooting steps, see the [Troubleshooting Documentation](documentation/troubleshooting.md)
