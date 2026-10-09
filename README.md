@@ -21,6 +21,8 @@ Built an automated network monitoring system using Ubuntu Linux and Bash scripti
 - DNS resolution monitoring
 - Timestamped monitoring and alert logs
 - Automatic default gateway detection and connectivity monitoring
+- Automatic Internet availability tracking every five minutes
+- Uptime reporting with total checks, successful checks, failed checks, and availability percentage
 
 ## Project Structure
 - scripts/network-check.sh - Main monitoring script

@@ -2,6 +2,7 @@
 
 LOG="$HOME/home-lab/logs/network-check.log"
 ALERT_LOG="$HOME/home-lab/logs/alerts.log"
+UPTIME_LOG="$HOME/home-lab/logs/uptime.log"
 
 echo "===========================================" >> "$LOG"
 echo "Network Check: $(date)" >> "$LOG"
@@ -72,4 +73,11 @@ elif [[ "DNS_STATUS" == "OFFLINE" ]]; then
    echo "Diagnosis: DNS FAILURE - Unable to resolve domain names" >> "$LOG"
 else
    echo "Diagnosis: NETWORK HEALTHY - All checks passed" >> "$LOG"
+fi
+
+# Internet uptime tracking
+if [[ "$INTERNET_STATUS" == "OFFLINE" ]]; then
+   echo "$(date '+%Y-%m-%d %H:%M:%S'),OFFLINE" >> "$UPTIME_LOG"
+else
+   echo "$(date '+%Y-%m-%d %H:%M:%S'),ONLINE" >> "$UPTIME_LOG"
 fi
