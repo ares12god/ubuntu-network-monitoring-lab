@@ -7,6 +7,16 @@ echo "===========================================" >> "$LOG"
 echo "Network Check: $(date)" >> "$LOG"
 echo "===========================================" >> "$LOG"
 
+# Gateway monitoring
+GATEWAY=$(ip route | awk '/^default/ {print $3; exit}')
+
+if ping -c 2 -W 2 "$GATEWAY" > /dev/null 2>&1; then
+   echo "Gateway Status: ONLINE" >> "$LOG"
+else
+   echo "Gateway Status: ALERT - UNREACHABLE" >> "$LOG"
+   echo "ALERT: $(date) - GATEWAY UNREACHABLE" >> "$ALERT_LOG"
+fi
+
 RESULT=$(ping -c 4 1.1.1.1)
 
 LOSS=$(echo "$RESULT" | grep "packet loss" | sed 's/.*,\s*\([0-9]*\)% packet loss.*/\1/')
