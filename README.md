@@ -20,6 +20,7 @@ Built an automated network monitoring system using Ubuntu Linux and Bash scripti
 - High latency alerts above 100 ms
 - DNS resolution monitoring
 - Timestamped monitoring and alert logs
+- Automatic default gateway detection and connectivity monitoring
 
 ## Project Structure
 - scripts/network-check.sh - Main monitoring script
