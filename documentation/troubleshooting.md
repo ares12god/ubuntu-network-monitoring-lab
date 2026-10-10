@@ -37,3 +37,13 @@
 **Resolution:** The script detected 100% packet loss, classified the connection as OFFLINE, generated an alert, and recorded the diagnosis. Seperate tes logs were used.
 
 **Lesson Learned:** Testing failure scenarios helps verify monitoring accuracy and ensures alerts work correctly.
+
+## Issue 5: Ubuntu System Clock Synchronization Failure
+
+**Problem:** Ubuntu displayed an incorrect date and time, causing daily network health reports to contain inaccurate timestamps.
+
+**Cause:** Chrony was running but had not established synchronization with a valid NTP time source.
+
+**Resolution:** Investigated using timedatectl, systemctl status chrony, chronyc sources -v, and chronyc tracking. Applied sudo chronyc makestep to correct the clock and restarted Chrony to establish synchronization.
+
+**Lesson Learned:** Accurate system time is essential for reliable monitoring, incident investigation, scheduled tasks, and log correlation.
