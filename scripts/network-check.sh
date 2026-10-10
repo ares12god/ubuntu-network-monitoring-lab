@@ -3,6 +3,7 @@
 LOG="$HOME/home-lab/logs/network-check.log"
 ALERT_LOG="$HOME/home-lab/logs/alerts.log"
 UPTIME_LOG="$HOME/home-lab/logs/uptime.log"
+PERFORMANCE_LOG="$HOME/home-lab/logs/performance.csv"
 
 echo "===========================================" >> "$LOG"
 echo "Network Check: $(date)" >> "$LOG"
@@ -81,3 +82,6 @@ if [[ "$INTERNET_STATUS" == "OFFLINE" ]]; then
 else
    echo "$(date '+%Y-%m-%d %H:%M:%S'),ONLINE" >> "$UPTIME_LOG"
 fi
+
+# Historical network performance tracking
+echo "$(date '+%Y-%m-%d %H:%M:%S'),${LOSS},${AVG}" >> "$PERFORMANCE_LOG"

@@ -59,3 +59,32 @@ During developement, I diagnosed and resolved several technical issues:
 These challenges strengthened my Linux troubleshooting, scripting, and problem-solving skills.
 
 For detailed troubleshooting steps, see the [Troubleshooting Documentation](documentation/troubleshooting.md)
+
+## Historical Network Performance Monitoring
+
+The Ubuntu Network Monitoring Lab automatically collects network performance measurements every five minutes using Bash and cron.
+
+### Performance Metrics
+- Average network latency (ms)
+- Maximum network latency (ms)
+- Average packet loss (%)
+- Timestamped historical measurements
+
+### Scripts
+- `scripts/network-check.sh` - Collects network measurements and records them in a CSV file.
+- `scripts/performance-report.sh` - Analyzes historical data and calculates network performance statistics.
+
+### Data Collection
+Performance measurements are stored locally in `logs/performance.csv`.
+
+Each record contains a timestamp, packet loss percentage, and average latency.
+
+### Running the Performance Report
+
+```bash
+./scripts/performance-report.sh
+...
+
+This project demonstrates practical experience with Linux,
+Bash scripting, cron automation, network troubleshooting,
+CSV logging, and performance analysis.
