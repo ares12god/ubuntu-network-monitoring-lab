@@ -83,8 +83,43 @@ Each record contains a timestamp, packet loss percentage, and average latency.
 
 ```bash
 ./scripts/performance-report.sh
-...
+```
 
 This project demonstrates practical experience with Linux,
 Bash scripting, cron automation, network troubleshooting,
 CSV logging, and performance analysis.
+
+## Python Network Monitoring Dashboard
+
+This project includes a Python-based dashboard that visualizes historical network performance data collected by the Ubuntu monitoring system.
+
+### Features
+
+- Automated data collection every five minutes using Bash and cron
+- Historical latency and packet-loss tracking
+- Python data processing using CSV and datetime
+- Network performance visualization using Matplotlib
+- PNG graph generation for troubleshooting and reporting
+
+### Network Latency Graph
+
+![Network Latency Over Time](dashboard/network-latency.png)
+
+### Network Packet Loss Graph
+
+![Network Packet Loss Over Time](dashboard/network-packet-loss.png)
+
+### Generate the Dashboard
+
+Install Matplotlib in a Python virtual environment, then run:
+
+```bash
+.venv/bin/python dashboard/network-dashboard.py
+```
+The script reads `logs/performance.csv` and generates both graphs in the `dashboard/` directory.
+
+**Note:** Historical performance logs are stored locally and are not uploaded to GitHub.
+
+### Skills Demonstrated
+
+Linux Administration | Python | Bash Scripting | Network Monitoring | Cron Automation | Data Visualization | Network Troubleshooting
