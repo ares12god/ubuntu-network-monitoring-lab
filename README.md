@@ -123,3 +123,43 @@ The script reads `logs/performance.csv` and generates both graphs in the `dashbo
 ### Skills Demonstrated
 
 Linux Administration | Python | Bash Scripting | Network Monitoring | Cron Automation | Data Visualization | Network Troubleshooting
+
+## Automated Network Diagnostic Toolkit
+
+Developed a Bash-based network diagnostic toolkit to automate common Linux network troubleshooting tasks.
+
+### Features
+
+- Automatically identifies the default gateway
+- Tests local gateway connectivity
+- Verifies external Internet connectivity
+- Checks DNS resolution
+- Displays the system routing table
+- Traces network paths to external destinations
+- Identifies listening TCP and UDP ports
+
+### Run the Toolkit
+
+```bash
+bash scripts/network-diagnostics.sh
+```
+
+### Example Results
+
+```text
+PASS: Gateway 192.168.64.1 is reachable.
+PASS: Internet connection is working.
+PASS: DNS resolution is working.
+```
+
+### Technologies Used
+
+- Ubuntu Linux
+- Bash scripting
+- TCP/IP networking
+- ICMP and DNS
+- iproute2, ping, nslookup, tracepath, ss
+
+### Skills Demonstrated
+
+Network Troubleshooting | Linux Administration | Bash Automation | DNS Diagnostics | Routing | TCP/IP | Network Security
