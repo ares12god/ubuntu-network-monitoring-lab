@@ -163,3 +163,46 @@ PASS: DNS resolution is working.
 ### Skills Demonstrated
 
 Network Troubleshooting | Linux Administration | Bash Automation | DNS Diagnostics | Routing | TCP/IP | Network Security
+
+## Automated Network Service Monitor
+
+Built a Bash-based monitoring tool to check TCP service availability and automatically record failures.
+
+### Features
+
+- Monitors SSH connectivity on TCP port 22
+- Uses Netcat (`nc`) to test service availability
+- Records timestamped PASS and FAIL results
+- Maintains a separate log for service failures
+- Runs automatically every five minutes using Cron
+- Supports monitoring additional TCP services
+
+### Run the Monitor
+
+```bash
+bash scripts/service-monitor.sh
+```
+
+### Example Output
+
+```text
+Checking SSH on port 22. . .
+PASS: SSH is reachable.
+```
+
+### Logging and Alerts
+
+The monitor maintains two local log files:
+
+- `logs/service-monitor.log` - Service check history
+- `logs/service-alerts.log` - Detected service failures
+
+Generated logs are kept locally and are not uploaded to GitHub.
+
+### Automation
+
+Configured Cron to execute the monitor every five minutes.
+
+### Skills Demonstrated
+
+Linux Administration | Bash Scripting | TCP/IP | Service Monitoring | Cron Automation | Network Troubleshooting | Log Management
