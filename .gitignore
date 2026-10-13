@@ -11,3 +11,13 @@ scripts/*-backup.sh
 # Temporary files
 *.tmp
 *.swp
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Generated reports
+reports/
+
+# Accidental temporary file
+%REPORT
