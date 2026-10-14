@@ -206,3 +206,14 @@ Configured Cron to execute the monitor every five minutes.
 ### Skills Demonstrated
 
 Linux Administration | Bash Scripting | TCP/IP | Service Monitoring | Cron Automation | Network Troubleshooting | Log Management
+
+## SSH Security Monitoring
+
+Built an automated SSH security monitoring system using Bash and Ubuntu Linux.
+
+### Features
+- Detects failed SSH login attempts within a five-minute window.
+- Identifies source IP addresses associated with failed logins.
+- Triggers security warnings when three or more failures occur.
+- Saves timestamped security alerts to a log file.
+- Runs automatically every five minutes using cron.
