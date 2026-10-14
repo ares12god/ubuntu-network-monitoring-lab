@@ -217,3 +217,18 @@ Built an automated SSH security monitoring system using Bash and Ubuntu Linux.
 - Triggers security warnings when three or more failures occur.
 - Saves timestamped security alerts to a log file.
 - Runs automatically every five minutes using cron.
+
+## System Health Monitor
+
+A Bash-based Linux monitoring tool that tracks CPU, memory, and disk usage in real time.
+
+### Features
+- Monitors CPU, memory, and disk usage.
+- Uses Linux /proc/stat to calculate CPU utilization.
+- Displays warnings when resource usage exceeds defined thresholds.
+
+### How to Run
+
+```bash
+./scripts/system-health-monitor.sh
+```
