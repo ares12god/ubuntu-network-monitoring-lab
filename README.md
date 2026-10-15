@@ -237,3 +237,7 @@ A Bash-based Linux monitoring tool that tracks CPU, memory, and disk usage in re
 
 The System Health Monitor runs automatically every 5 minutes using Linux cron. Each execution records CPU, memory, and disk usage in system-health.log.
 
+### Alert Logging
+
+The System Health Monitor automatically records timestamped alerts in system-alerts.log when CPU usage reaches 80%, memory usage reaches 80%, or disk usage reaches 85%.
+
