@@ -232,3 +232,8 @@ A Bash-based Linux monitoring tool that tracks CPU, memory, and disk usage in re
 ```bash
 ./scripts/system-health-monitor.sh
 ```
+
+### Automated Monitoring
+
+The System Health Monitor runs automatically every 5 minutes using Linux cron. Each execution records CPU, memory, and disk usage in system-health.log.
+
