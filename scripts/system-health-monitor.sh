@@ -7,6 +7,7 @@
 CPU_THRESHOLD=80
 MEMORY_THRESHOLD=80
 DISK_THRESHOLD=85
+ALERT_LOG="$HOME/home-lab/system-alerts.log"
 
 read -r _ user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat
 TOTAL1=$((user + nice + system + idle + iowait + irq + softirq + steal))
@@ -28,18 +29,21 @@ echo "Disk Usage: $DISK_USAGE%"
 
 if [ "$CPU_USAGE" -ge "$CPU_THRESHOLD" ]; then
     echo "WARNING: High CPU usage detected!"
+    echo "$(date): WARNING - CPU usage at $CPU_USAGE%" >> "$ALERT_LOG"
 else
     echo "CPU Status: Normal"
 fi
 
 if [ "$MEMORY_USAGE" -ge "$MEMORY_THRESHOLD" ]; then
     echo "WARNING: High memory usage detected!"
+    echo "$(date): WARNING - Memory usage at $MEMORY_USAGE%" >> "$ALERT_LOG"
 else
     echo "Memory Status: Normal"
 fi
 
 if [ "$DISK_USAGE" -ge "$DISK_THRESHOLD" ]; then
     echo "WARNING: High disk usage detected!"
+    echo "$(date): WARNING - Disk usage at $DISK_USAGE%" >> "$ALERT_LOG"
 else
     echo "Disk Status: Normal"
 fi
