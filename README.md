@@ -32,6 +32,11 @@ Built an automated network monitoring system using Ubuntu Linux and Bash scripti
 - logs/network-check.log - Network monitoring history
 - logs/alerts.log - Recorded network alerts
 - documentation/network-baseline.txt - Initial network baseline
+- scripts/network-dashboard.py - Python dashboard for visualizing network latency and packet loss
+- scripts/ssh-security-monitor.sh - Monitors SSH authentication activity and security events
+- scripts/system-health-monitor.sh - Monitors system health and resource usage
+- scripts/service-monitor.sh - Monitors critical Linux services and checks their operational status
+- scripts/performance-report.sh - Records network latency and packet loss for historical performance analysis
 
 ## Skills Demonstrated
 - Linux command-line administration
