@@ -21,3 +21,6 @@ reports/
 
 # Accidental temporary file
 %REPORT
+
+# Python virtual environment
+.venv/
