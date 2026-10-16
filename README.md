@@ -241,3 +241,10 @@ The System Health Monitor runs automatically every 5 minutes using Linux cron. E
 
 The System Health Monitor automatically records timestamped alerts in system-alerts.log when CPU usage reaches 80%, memory usage reaches 80%, or disk usage reaches 85%.
 
+## Automated Network Performance Dashboard
+
+Built a Python-based dashboard using Matplotlib to visualize network latency and packet loss.
+
+The dashboard automatically updates every 5 minutes using Linux cron jobs, displaying historical network latency (ms) and packet loss (%).
+
+![Network Performance Dashboard](network-dashboard.png)
