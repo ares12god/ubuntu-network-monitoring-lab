@@ -2,6 +2,17 @@
 
 LOG="$HOME/home-lab/logs/network-check.log"
 ALERT_LOG="$HOME/home-lab/logs/alerts.log"
+ALERT_STATE_FILE="$HOME/home-lab/logs/alert-state.txt"
+touch "$ALERT_STATE_FILE"
+log_alert() {
+    local alert_type="$1"
+    local alert_message="$2"
+
+    if ! grep -Fxq "$alert_type" "$ALERT_STATE_FILE"; then
+        echo "ALERT: $(date) - $alert_message" >> "$ALERT_LOG"
+        echo "$alert_type" >> "$ALERT_STATE_FILE"
+    fi
+}
 UPTIME_LOG="$HOME/home-lab/logs/uptime.log"
 PERFORMANCE_LOG="$HOME/home-lab/logs/performance.csv"
 
@@ -14,11 +25,12 @@ GATEWAY=$(ip route | awk '/^default/ {print $3; exit}')
 
 if ping -c 2 -W 2 "$GATEWAY" > /dev/null 2>&1; then
    GATEWAY_STATUS="Online"
+   sed -i '/^GATEWAY_UNREACHABLE$/d' "$ALERT_STATE_FILE"
    echo "Gateway Status: ONLINE" >> "$LOG"
 else
    GATEWAY_STATUS="Offline"
    echo "Gateway Status: ALERT - UNREACHABLE" >> "$LOG"
-   echo "ALERT: $(date) - GATEWAY UNREACHABLE" >> "$ALERT_LOG"
+   log_alert "GATEWAY_UNREACHABLE" "GATEWAY UNREACHABLE"
 fi
 
 RESULT=$(ping -c 4 1.1.1.1)
@@ -37,27 +49,33 @@ fi
 if [[ "$LOSS" == "100" ]]; then
     INTERNET_STATUS="OFFLINE"
     echo "Internet Status: ALERT - CONNECTION OFFLINE" >> "$LOG"
-    echo "ALERT: $(date) - INTERNET CONNECTION OFFLINE" >> "ALERT_LOG"
+    log_alert "INTERNET_OFFLINE" "INTERNET CONNECTION OFFLINE"
 elif [[ "$LOSS" != "0" ]]; then
+    sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
     INTERNET_STATUS="DEGRADED"
     echo "Internet Status: ALERT - PACKET LOSS DETECTED" >> "$LOG"
-    echo "ALERT: $(date) - PACKET LOSS DETECTED - $LOSS%" >> "$ALERT_LOG"
+    log_alert "PACKET_LOSS" "PACKET LOSS DETECTED"
 elif (( $(echo "$AVG > 100" | bc -l) )); then
+    sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
     INTERNET_STATUS="DEGRADED"
     echo "Internet Status: ALERT - HIGH LATENCY" >> "$LOG"
-    echo "ALERT: $(date) - HIGH LATENCY - $AVG ms" >> "$ALERT_LOG"
+    log_alert "HIGH_LATENCY" "HIGH LATENCY"
 else
     INTERNET_STATUS="ONLINE"
+    sed -i '/^HIGH_LATENCY$/d' "$ALERT_STATE_FILE"
+    sed -i '/^PACKET_LOSS$/d' "$ALERT_STATE_FILE"
+    sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
     echo "Internet Status: ONLINE" >> "$LOG"
 fi
 
 if getent hosts google.com > /dev/null; then
    DNS_STATUS="ONLINE"
+   sed -i '/^DNS_FAILURES$/d' "$ALERT_STATE_FILE"
    echo "DNS Status: ONLINE" >> "$LOG"
 else
    DNS_STATUS="OFFLINE"
    echo "DNS Status: ALERT - DNS RESOLUTION FAILED" >> "$LOG"
-   echo "ALERT: $(date) - DNS RESOLUTION FAILED" >> "$ALERT_LOG"
+   log_alert "DNS_FAILURE" "DNS RESOLUTION FAILED"
 fi
 
 echo "Check completed." >> "$LOG"
