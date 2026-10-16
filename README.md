@@ -101,22 +101,14 @@ This project includes a Python-based dashboard that visualizes historical networ
 - Network performance visualization using Matplotlib
 - PNG graph generation for troubleshooting and reporting
 
-### Network Latency Graph
-
-![Network Latency Over Time](dashboard/network-latency.png)
-
-### Network Packet Loss Graph
-
-![Network Packet Loss Over Time](dashboard/network-packet-loss.png)
-
 ### Generate the Dashboard
 
 Install Matplotlib in a Python virtual environment, then run:
 
 ```bash
-.venv/bin/python dashboard/network-dashboard.py
+.venv/bin/python scripts/network-dashboard.py
 ```
-The script reads `logs/performance.csv` and generates both graphs in the `dashboard/` directory.
+The script reads `logs/performance.csv` and generates `network-dashboard.png` in the project root, displaying network latency and packet loss in two graphs.
 
 **Note:** Historical performance logs are stored locally and are not uploaded to GitHub.
 
