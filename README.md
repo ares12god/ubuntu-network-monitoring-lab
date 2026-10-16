@@ -48,9 +48,7 @@ Built an automated network monitoring system using Ubuntu Linux and Bash scripti
 - Troubleshooting and debugging
 
 ## Future Improvements
-- Monitoring dashboard
 - Email notifications
-- Historical performance reporting
 - Additional network monitoring targets
 
 ## Troubleshooting Experience
