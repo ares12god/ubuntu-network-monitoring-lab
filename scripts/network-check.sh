@@ -54,6 +54,7 @@ elif [[ "$LOSS" != "0" ]]; then
     sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
     INTERNET_STATUS="DEGRADED"
     echo "Internet Status: ALERT - PACKET LOSS DETECTED" >> "$LOG"
+    sed -i '/^HIGH_LATENCY$/d' "$ALERT_STATE_FILE"
     log_alert "PACKET_LOSS" "PACKET LOSS DETECTED"
 elif (( $(echo "$AVG > 100" | bc -l) )); then
     sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
