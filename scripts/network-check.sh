@@ -50,6 +50,8 @@ if [[ "$LOSS" == "100" ]]; then
     INTERNET_STATUS="OFFLINE"
     echo "Internet Status: ALERT - CONNECTION OFFLINE" >> "$LOG"
     log_alert "INTERNET_OFFLINE" "INTERNET CONNECTION OFFLINE"
+    sed -i '/^PACKET_LOSS$/d' "$ALERT_STATE_FILE"
+    sed -i '/^HIGH_LATENCY$/d' "$ALERT_STATE_FILE"
 elif [[ "$LOSS" != "0" ]]; then
     sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
     INTERNET_STATUS="DEGRADED"
@@ -58,6 +60,7 @@ elif [[ "$LOSS" != "0" ]]; then
     log_alert "PACKET_LOSS" "PACKET LOSS DETECTED"
 elif (( $(echo "$AVG > 100" | bc -l) )); then
     sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
+    sed -i '/^PACKET_LOSS$/d' "$ALERT_STATE_FILE"
     INTERNET_STATUS="DEGRADED"
     echo "Internet Status: ALERT - HIGH LATENCY" >> "$LOG"
     log_alert "HIGH_LATENCY" "HIGH LATENCY"
