@@ -14,7 +14,7 @@ I built it in a home lab to practice the day-to-day work of a network or systems
 - **Alerting without alert fatigue.** An alert is logged once when a problem starts and a `RECOVERED` entry is logged once when it clears, which gives exact incident start and end times.
 - **A real incident, investigated.** On October 9 the monitor caught repeated gateway failures. I wrote up the timeline, evidence, and findings in an [incident report](reports/incident-2026-10-09.md).
 - **Tested against failure, not only success.** Outages, packet loss, high latency, a gateway that drops ping, and DNS failures were all simulated to confirm each one is detected and diagnosed correctly ([troubleshooting log](documentation/troubleshooting.md)).
-- **Security monitoring.** UFW firewall hardening and an SSH monitor that flags brute-force login attempts and the source IPs behind them.
+- **Security monitoring.** UFW firewall hardening, an SSH monitor that flags brute-force login attempts and the source IPs behind them, and a listening-port review that [found and disabled an unneeded service](documentation/firewall-security.md#finding-unintended-iperf3-service-october-21-2026).
 
 ## How it works
 

@@ -63,6 +63,26 @@ Result: SSH connection successful after enabling the firewall.
 - Use systemctl to inspect Linux services.
 - Use UFW to control incoming network traffic.
 
+## Finding: Unintended iperf3 Service (October 21, 2026)
+
+**Detection:** The listening-ports step of `scripts/network-diagnostics.sh` (`ss -tuln`) showed TCP port 5201 listening on all interfaces (`*:5201`). No service on that port had been set up intentionally.
+
+**Identification:** Matched the port to its process:
+
+    sudo ss -tlnp | grep 5201
+
+The output showed `iperf3` (a network bandwidth-testing tool) with a low process ID, which meant it was a system service starting at boot. Ubuntu's iperf3 package offers to run it as a background server during installation.
+
+**Risk:** UFW's default deny-incoming policy already blocked the port, so it was not reachable from outside the VM. It was still an unneeded service exposed on every interface, which a single firewall change could have opened up.
+
+**Remediation:** Stopped the service and disabled it from starting at boot:
+
+    sudo systemctl disable --now iperf3
+
+**Verification:** `sudo ss -tlnp | grep 5201` returned no output, confirming the port was closed. The VM now listens externally only on SSH (TCP 22).
+
+**Lesson Learned:** A firewall is one layer of defense, not a reason to leave services running. Review listening ports regularly, identify the process behind each one, and disable anything that isn't needed (defense in depth and least functionality).
+
 ## Skills Demonstrated
 
-Linux Security | UFW | SSH | TCP/IP | Firewall Management | Remote Administration | Network Troubleshooting
+Linux Security | UFW | SSH | TCP/IP | Firewall Management | Remote Administration | Network Troubleshooting | Attack Surface Reduction
