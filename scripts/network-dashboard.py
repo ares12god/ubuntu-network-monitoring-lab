@@ -13,9 +13,14 @@ with open(DATA_FILE, "r") as file:
     for row in reader:
         if len(row) < 3 or not row[2].strip():
             continue
+        try:
+            loss = float(row[1])
+            delay = float(row[2])
+        except ValueError:
+            continue
         timestamps.append(row[0])
-        packet_loss.append(float(row[1]))
-        latency.append(float(row[2]))
+        packet_loss.append(loss)
+        latency.append(delay)
 
 plt.figure(figsize=(12, 8))
 plt.subplot(2, 1, 1)

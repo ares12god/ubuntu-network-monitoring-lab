@@ -16,9 +16,6 @@ scripts/*-backup.sh
 __pycache__/
 *.pyc
 
-# Generated reports
-reports/
-
 # Accidental temporary file
 %REPORT
 

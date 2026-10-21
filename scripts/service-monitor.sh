@@ -10,7 +10,7 @@ echo "Date:::: $(date)"
 echo " "
 
 # Ubuntu VM IP address
-SERVER="192.168.64.2"
+SERVER=$(hostname -I | awk '{print $1}')
 
 #Service monitoring log files
 LOG_FILE="$HOME/home-lab/logs/service-monitor.log"

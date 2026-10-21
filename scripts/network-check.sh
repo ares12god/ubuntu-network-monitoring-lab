@@ -40,7 +40,7 @@ AVG=$(echo "$RESULT" | grep "rtt" | sed 's/.*= [0-9.]*\/\([0-9.]*\)\/.*/\1/')
 
 echo "Internet Packet Loss: $LOSS%" >> "$LOG"
 
-if [[ -z "AVG" ]]; then
+if [[ -z "$AVG" ]]; then
     echo "Internet Average Latency: N/A" >> "$LOG"
 else
     echo "Internet Average Latency: $AVG ms" >> "$LOG"
@@ -74,7 +74,7 @@ fi
 
 if getent hosts google.com > /dev/null; then
    DNS_STATUS="ONLINE"
-   sed -i '/^DNS_FAILURES$/d' "$ALERT_STATE_FILE"
+   sed -i '/^DNS_FAILURE$/d' "$ALERT_STATE_FILE"
    echo "DNS Status: ONLINE" >> "$LOG"
 else
    DNS_STATUS="OFFLINE"
@@ -92,7 +92,7 @@ elif [[ "$INTERNET_STATUS" == "OFFLINE" ]]; then
    echo "Diagnosis: INTERNET OUTAGE - Gateway reachable but Internet unavailable" >> "$LOG"
 elif [[ "$INTERNET_STATUS" == "DEGRADED" ]]; then
    echo "Diagnosis: INTERNET PERFORMANCE ISSUE - Packet loss or high latency" >> "$LOG"
-elif [[ "DNS_STATUS" == "OFFLINE" ]]; then
+elif [[ "$DNS_STATUS" == "OFFLINE" ]]; then
    echo "Diagnosis: DNS FAILURE - Unable to resolve domain names" >> "$LOG"
 else
    echo "Diagnosis: NETWORK HEALTHY - All checks passed" >> "$LOG"
