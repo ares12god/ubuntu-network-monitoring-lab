@@ -48,6 +48,19 @@
 
 **Lesson Learned:** Accurate system time is essential for reliable monitoring, incident investigation, scheduled tasks, and log correlation.
 
+**Recurrence (October 21, 2026):** The clock fell behind again, this time by 49 minutes. Reports were stamped 14:06 when the real time was about 14:58.
+
+**Root Cause:** The VM runs in UTM on a MacBook. When the Mac sleeps, the VM is paused, and when it resumes, its system clock picks up from where it stopped. `timedatectl` confirmed this: the hardware clock (RTC) was correct while the system clock was 49 minutes slow. Chrony was running, but its default setting, `makestep 1 3`, only allows large jumps during the first three clock updates after boot. After that, Chrony corrects gradually, which would take days to close a 49-minute gap.
+
+**Permanent Fix:** Changed the setting in `/etc/chrony/chrony.conf` to `makestep 1 -1`, which allows Chrony to step the clock whenever it is off by more than one second, then restarted the service:
+
+    sudo sed -i 's/^makestep 1 3$/makestep 1 -1/' /etc/chrony/chrony.conf
+    sudo systemctl restart chrony
+
+Verified with `timedatectl`: local time matched the host and "System clock synchronized" returned `yes`.
+
+**Lesson Learned:** A fix that works once may not address the root cause. Virtual machines that are paused and resumed need time sync configured to correct large offsets at any time, not only at boot.
+
 ## Issue 6: Daily Report Showed Zero Alerts on a Day With an Incident
 
 **Problem:** The October 9 daily report showed "Alerts Today: 0", but the incident investigation for the same day counted 15 alerts.
