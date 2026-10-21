@@ -86,7 +86,7 @@ echo "Check completed." >> "$LOG"
 echo " " >> "$LOG"
 
 # Automatic network fault diagnosis
-if [[ "$GATEWAY_STATUS" == "OFFLINE" ]]; then
+if [[ "$GATEWAY_STATUS" == "Offline" ]]; then
    echo "Diagnosis: LOCAL NETWORK FAILURE - Gatway unreachable" >> "$LOG"
 elif [[ "$INTERNET_STATUS" == "OFFLINE" ]]; then
    echo "Diagnosis: INTERNET OUTAGE - Gateway reachable but Internet unavailable" >> "$LOG"
