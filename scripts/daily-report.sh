@@ -96,7 +96,7 @@ todays_alerts() {
         echo "Alerts by Type:"
         # Strip the timestamp and any trailing detail ("- 25%", "(1.1.1.1)")
         echo "$ALERTS" \
-            | sed -E 's/^.*\| ALERT \| //; s/^ALERT: .* - //; s/ (- |\().*$//' \
+            | sed -E 's/^.*\| ALERT \| //; s/^ALERT: [^-]* - //; s/ (- |\().*$//' \
             | sort | uniq -c | sort -rn | sed 's/^ */  /'
     fi
 } > "$REPORT"
