@@ -1,45 +1,45 @@
 #!/bin/bash
+# Network Service Monitor
+# Checks that TCP services are accepting connections and records failures.
+#
+# Services come from SERVICES in common.sh (NAME:PORT pairs), e.g.
+#   SERVICES="SSH:22 HTTP:80" ./scripts/service-monitor.sh
 
-# Ubuntu Network Service Monitor
-# Purpose: Check network services and detect failures
+# shellcheck source=common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
+LOG_FILE="$LOG_DIR/service-monitor.log"
+ALERT_FILE="$LOG_DIR/service-alerts.log"
+
+# Host to test: this machine's primary IP, so the check goes through the
+# network stack and firewall rather than loopback. Override with SERVICE_HOST.
+SERVER="${SERVICE_HOST:-$(hostname -I 2>/dev/null | awk '{print $1}')}"
+SERVER="${SERVER:-127.0.0.1}"
 
 echo "========================================="
 echo "      NETWORK SERVICE MONITOR"
 echo "========================================="
-echo "Date:::: $(date)"
+echo "Date: $(timestamp)"
+echo "Host: $SERVER"
 echo " "
-
-# Ubuntu VM IP address
-SERVER=$(hostname -I | awk '{print $1}')
-
-#Service monitoring log files
-LOG_FILE="$HOME/home-lab/logs/service-monitor.log"
-ALERT_FILE="$HOME/home-lab/logs/service-alerts.log"
-
-# Create the logs directory if needed
-mkdir -p "$HOME/home-lab/logs"
 
 # Check whether a TCP service is reachable
 check_service() {
-     SERVICE_NAME="$1"
-     PORT="$2"
+    local service_name="$1" port="$2"
 
-     echo "Checking $SERVICE_NAME on port $PORT. . ."
+    echo "Checking $service_name on port $port. . ."
 
-     if nc -z -w 3 "$SERVER" "$PORT" > /dev/null 2>&1; then
-         echo "PASS: $SERVICE_NAME is reachable."
-         echo "$(date '+%Y-%m-%d %H:%M:%S') | $SERVICE_NAME | PASS" >> "$LOG_FILE"
-     else
-         echo "FAIL: $SERVICE_NAME is unreachable."
-         echo "$(date '+%Y-%m-%d %H:%M:%S') | $SERVICE_NAME | FAIL" >> "$LOG_FILE"
-         echo "$(date '+%Y-%m-%d %H:%M:%S') | ALERT: $SERVICE_NAME on port $PORT is unreachable" >> "$ALERT_FILE"
-     fi
-
-     echo " "
+    if nc -z -w 3 "$SERVER" "$port" > /dev/null 2>&1; then
+        echo "PASS: $service_name is reachable."
+        echo "$(timestamp) | $service_name | $SERVER:$port | PASS" >> "$LOG_FILE"
+    else
+        echo "FAIL: $service_name is unreachable."
+        echo "$(timestamp) | $service_name | $SERVER:$port | FAIL" >> "$LOG_FILE"
+        echo "$(timestamp) | ALERT | $service_name on $SERVER:$port is unreachable" >> "$ALERT_FILE"
+    fi
+    echo " "
 }
 
-# Test SSH connectivity
-check_service "SSH" 22
-
-# Test an unavailable TCP service
-# check_service "Test Service" 9999
+for service in $SERVICES; do
+    check_service "${service%%:*}" "${service##*:}"
+done

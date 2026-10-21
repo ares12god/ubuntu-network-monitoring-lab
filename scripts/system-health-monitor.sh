@@ -1,50 +1,50 @@
 #!/bin/bash
-
 # System Health Monitor
-# Monitors CPU, memory, and disk usage
-# Ubuntu Network Monitoring Home Lab
+# Measures CPU, memory, and disk usage, records each reading, and logs an
+# alert when a threshold is crossed. Runs from cron every 5 minutes.
 
-CPU_THRESHOLD=80
-MEMORY_THRESHOLD=80
-DISK_THRESHOLD=85
-ALERT_LOG="$HOME/home-lab/system-alerts.log"
+# shellcheck source=common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
 
-read -r _ user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat
-TOTAL1=$((user + nice + system + idle + iowait + irq + softirq + steal))
-IDLE1=$((idle + iowait))
+HEALTH_LOG="$LOG_DIR/system-health.log"
+ALERT_LOG="$LOG_DIR/system-alerts.log"
+
+# CPU: sample the counters in /proc/stat one second apart. Usage is the share
+# of elapsed CPU time that was not idle or waiting on I/O.
+read_cpu() {
+    local _ user nice system idle iowait irq softirq steal
+    read -r _ user nice system idle iowait irq softirq steal _ < /proc/stat
+    echo "$((user + nice + system + idle + iowait + irq + softirq + steal)) $((idle + iowait))"
+}
+read -r TOTAL1 IDLE1 <<< "$(read_cpu)"
 sleep 1
-read -r _ user nice system idle iowait irq softirq steal guest guest_nice < /proc/stat
-TOTAL2=$((user + nice + system + idle + iowait + irq + softirq + steal))
-IDLE2=$((idle + iowait))
-CPU_USAGE=$((100 * ((TOTAL2 -TOTAL1) - (IDLE2 -IDLE1)) / (TOTAL2 - TOTAL1)))
+read -r TOTAL2 IDLE2 <<< "$(read_cpu)"
+CPU_USAGE=$((100 * ((TOTAL2 - TOTAL1) - (IDLE2 - IDLE1)) / (TOTAL2 - TOTAL1)))
 
-MEMORY_USAGE=$(free | awk '/^Mem:/ {printf "%.0f", ($2-$7)/$2*100}')
+# Memory: (total - available) / total. "available" counts reclaimable cache,
+# so this reflects real memory pressure rather than cache usage.
+MEMORY_USAGE=$(free | awk '/^Mem:/ {printf "%.0f", ($2 - $7) / $2 * 100}')
 
-DISK_USAGE=$(df / | awk 'NR==2 {gsub("%", " ",$5); print $5}')
+# Disk: usage of the root filesystem, without the % sign
+DISK_USAGE=$(df --output=pcent / | tail -1 | tr -dc '0-9')
 
 echo "===== SYSTEM HEALTH REPORT ====="
 echo "CPU Usage: $CPU_USAGE%"
 echo "Memory Usage: $MEMORY_USAGE%"
 echo "Disk Usage: $DISK_USAGE%"
 
-if [ "$CPU_USAGE" -ge "$CPU_THRESHOLD" ]; then
-    echo "WARNING: High CPU usage detected!"
-    echo "$(date): WARNING - CPU usage at $CPU_USAGE%" >> "$ALERT_LOG"
-else
-    echo "CPU Status: Normal"
-fi
+echo "$(timestamp) | CPU $CPU_USAGE% | Memory $MEMORY_USAGE% | Disk $DISK_USAGE%" >> "$HEALTH_LOG"
 
-if [ "$MEMORY_USAGE" -ge "$MEMORY_THRESHOLD" ]; then
-    echo "WARNING: High memory usage detected!"
-    echo "$(date): WARNING - Memory usage at $MEMORY_USAGE%" >> "$ALERT_LOG"
-else
-    echo "Memory Status: Normal"
-fi
+check_threshold() {
+    local name="$1" usage="$2" threshold="$3"
+    if [[ "$usage" -ge "$threshold" ]]; then
+        echo "WARNING: High $name usage detected!"
+        echo "$(timestamp) | ALERT | $name usage at $usage% (threshold $threshold%)" >> "$ALERT_LOG"
+    else
+        echo "$name Status: Normal"
+    fi
+}
 
-if [ "$DISK_USAGE" -ge "$DISK_THRESHOLD" ]; then
-    echo "WARNING: High disk usage detected!"
-    echo "$(date): WARNING - Disk usage at $DISK_USAGE%" >> "$ALERT_LOG"
-else
-    echo "Disk Status: Normal"
-fi
-
+check_threshold "CPU" "$CPU_USAGE" "$CPU_THRESHOLD"
+check_threshold "Memory" "$MEMORY_USAGE" "$MEMORY_THRESHOLD"
+check_threshold "Disk" "$DISK_USAGE" "$DISK_THRESHOLD"

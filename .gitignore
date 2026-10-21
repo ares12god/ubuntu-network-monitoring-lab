@@ -1,23 +1,16 @@
-
-gitignore
-
-# Monitoring logs
+# Monitoring data written by the scripts (kept on the lab machine, not in git)
 logs/
 *.log
+reports/generated/
 
 # Backup scripts
 scripts/*-backup.sh
 
-# Temporary files
+# Editor and temporary files
 *.tmp
 *.swp
 
-# Python cache files
+# Python
 __pycache__/
 *.pyc
-
-# Accidental temporary file
-%REPORT
-
-# Python virtual environment
 .venv/

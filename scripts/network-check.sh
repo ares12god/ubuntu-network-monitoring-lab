@@ -1,109 +1,156 @@
 #!/bin/bash
+# Network Check
+# Tests gateway reachability, Internet connectivity (packet loss + latency)
+# and DNS resolution, diagnoses the likely fault, and records history for
+# the uptime, performance, and dashboard reports. Runs from cron every 5 minutes.
+#
+# Simulate a full Internet outage (192.0.2.1 is a reserved TEST-NET address
+# that never answers) without touching the real logs:
+#   INTERNET_TARGET=192.0.2.1 LOG_DIR=/tmp/lab-test ./scripts/network-check.sh
 
-LOG="$HOME/home-lab/logs/network-check.log"
-ALERT_LOG="$HOME/home-lab/logs/alerts.log"
-ALERT_STATE_FILE="$HOME/home-lab/logs/alert-state.txt"
+# shellcheck source=common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/common.sh"
+
+LOG="$LOG_DIR/network-check.log"
+ALERT_LOG="$LOG_DIR/alerts.log"
+ALERT_STATE_FILE="$LOG_DIR/alert-state.txt"
+UPTIME_LOG="$LOG_DIR/uptime.log"
+PERFORMANCE_LOG="$LOG_DIR/performance.csv"
+NOW=$(timestamp)
+
 touch "$ALERT_STATE_FILE"
-log_alert() {
-    local alert_type="$1"
-    local alert_message="$2"
 
+log() {
+    echo "$*" >> "$LOG"
+}
+
+# Alert de-duplication: an alert is written once when a problem starts, and a
+# RECOVERED line is written once when it clears, instead of every 5 minutes.
+raise_alert() {
+    local alert_type="$1" message="$2"
     if ! grep -Fxq "$alert_type" "$ALERT_STATE_FILE"; then
-        echo "ALERT: $(date) - $alert_message" >> "$ALERT_LOG"
+        echo "$NOW | ALERT | $message" >> "$ALERT_LOG"
         echo "$alert_type" >> "$ALERT_STATE_FILE"
     fi
 }
-UPTIME_LOG="$HOME/home-lab/logs/uptime.log"
-PERFORMANCE_LOG="$HOME/home-lab/logs/performance.csv"
 
-echo "===========================================" >> "$LOG"
-echo "Network Check: $(date)" >> "$LOG"
-echo "===========================================" >> "$LOG"
+clear_alert() {
+    local alert_type="$1" message="$2"
+    if grep -Fxq "$alert_type" "$ALERT_STATE_FILE"; then
+        sed -i "/^${alert_type}\$/d" "$ALERT_STATE_FILE"
+        echo "$NOW | RECOVERED | $message" >> "$ALERT_LOG"
+    fi
+}
 
-# Gateway monitoring
-GATEWAY=$(ip route | awk '/^default/ {print $3; exit}')
+# Remove an alert state without logging a recovery (used when a worse
+# condition supersedes it, e.g. packet loss turning into a full outage)
+drop_alert() {
+    sed -i "/^${1}\$/d" "$ALERT_STATE_FILE"
+}
 
-if ping -c 2 -W 2 "$GATEWAY" > /dev/null 2>&1; then
-   GATEWAY_STATUS="Online"
-   sed -i '/^GATEWAY_UNREACHABLE$/d' "$ALERT_STATE_FILE"
-   echo "Gateway Status: ONLINE" >> "$LOG"
+log "==========================================="
+log "Network Check: $NOW"
+log "==========================================="
+
+# --- Gateway ----------------------------------------------------------------
+GATEWAY=$(default_gateway)
+
+if [[ -z "$GATEWAY" ]]; then
+    GATEWAY_STATUS="OFFLINE"
+    log "Gateway Status: ALERT - NO DEFAULT ROUTE"
+    raise_alert "GATEWAY_UNREACHABLE" "NO DEFAULT GATEWAY CONFIGURED"
+elif ping -c 2 -W 2 "$GATEWAY" > /dev/null 2>&1; then
+    GATEWAY_STATUS="ONLINE"
+    log "Gateway Status: ONLINE ($GATEWAY)"
+    clear_alert "GATEWAY_UNREACHABLE" "GATEWAY $GATEWAY REACHABLE AGAIN"
 else
-   GATEWAY_STATUS="Offline"
-   echo "Gateway Status: ALERT - UNREACHABLE" >> "$LOG"
-   log_alert "GATEWAY_UNREACHABLE" "GATEWAY UNREACHABLE"
+    GATEWAY_STATUS="OFFLINE"
+    log "Gateway Status: ALERT - $GATEWAY UNREACHABLE"
+    raise_alert "GATEWAY_UNREACHABLE" "GATEWAY $GATEWAY UNREACHABLE"
 fi
 
-RESULT=$(ping -c 4 1.1.1.1)
+# --- Internet: packet loss and latency -----------------------------------
+RESULT=$(ping -c 4 -W 2 "$INTERNET_TARGET" 2>&1)
 
-LOSS=$(echo "$RESULT" | grep "packet loss" | sed 's/.*,\s*\([0-9]*\)% packet loss.*/\1/')
-AVG=$(echo "$RESULT" | grep "rtt" | sed 's/.*= [0-9.]*\/\([0-9.]*\)\/.*/\1/')
+# "4 packets transmitted, 3 received, 25% packet loss" -> 25
+LOSS=$(echo "$RESULT" | sed -n 's/.* \([0-9.]*\)% packet loss.*/\1/p')
+# "rtt min/avg/max/mdev = 10.1/12.3/15.0/1.2 ms" -> 12.3
+AVG=$(echo "$RESULT" | awk -F/ '/^(rtt|round-trip)/ {print $5}')
 
-echo "Internet Packet Loss: $LOSS%" >> "$LOG"
-
-if [[ -z "$AVG" ]]; then
-    echo "Internet Average Latency: N/A" >> "$LOG"
-else
-    echo "Internet Average Latency: $AVG ms" >> "$LOG"
+# With no route at all, ping exits with an error ("Network is unreachable")
+# and prints no statistics line. That is a total outage, not a parse failure.
+if [[ -z "$LOSS" ]]; then
+    LOSS=100
+    log "Internet Ping Error: $(echo "$RESULT" | head -1)"
 fi
+
+log "Internet Packet Loss: $LOSS%"
+log "Internet Average Latency: ${AVG:-N/A}${AVG:+ ms}"
 
 if [[ "$LOSS" == "100" ]]; then
     INTERNET_STATUS="OFFLINE"
-    echo "Internet Status: ALERT - CONNECTION OFFLINE" >> "$LOG"
-    log_alert "INTERNET_OFFLINE" "INTERNET CONNECTION OFFLINE"
-    sed -i '/^PACKET_LOSS$/d' "$ALERT_STATE_FILE"
-    sed -i '/^HIGH_LATENCY$/d' "$ALERT_STATE_FILE"
+    log "Internet Status: ALERT - CONNECTION OFFLINE"
+    drop_alert "PACKET_LOSS"
+    drop_alert "HIGH_LATENCY"
+    raise_alert "INTERNET_OFFLINE" "INTERNET CONNECTION OFFLINE ($INTERNET_TARGET)"
 elif [[ "$LOSS" != "0" ]]; then
-    sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
     INTERNET_STATUS="DEGRADED"
-    echo "Internet Status: ALERT - PACKET LOSS DETECTED" >> "$LOG"
-    sed -i '/^HIGH_LATENCY$/d' "$ALERT_STATE_FILE"
-    log_alert "PACKET_LOSS" "PACKET LOSS DETECTED"
-elif (( $(echo "$AVG > 100" | bc -l) )); then
-    sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
-    sed -i '/^PACKET_LOSS$/d' "$ALERT_STATE_FILE"
+    log "Internet Status: ALERT - PACKET LOSS DETECTED"
+    clear_alert "INTERNET_OFFLINE" "INTERNET CONNECTION RESTORED"
+    clear_alert "HIGH_LATENCY" "LATENCY BACK TO NORMAL"
+    raise_alert "PACKET_LOSS" "PACKET LOSS DETECTED - $LOSS%"
+elif greater_than "$AVG" "$LATENCY_THRESHOLD_MS"; then
     INTERNET_STATUS="DEGRADED"
-    echo "Internet Status: ALERT - HIGH LATENCY" >> "$LOG"
-    log_alert "HIGH_LATENCY" "HIGH LATENCY"
+    log "Internet Status: ALERT - HIGH LATENCY"
+    clear_alert "INTERNET_OFFLINE" "INTERNET CONNECTION RESTORED"
+    clear_alert "PACKET_LOSS" "PACKET LOSS RESOLVED"
+    raise_alert "HIGH_LATENCY" "HIGH LATENCY - $AVG ms"
 else
     INTERNET_STATUS="ONLINE"
-    sed -i '/^HIGH_LATENCY$/d' "$ALERT_STATE_FILE"
-    sed -i '/^PACKET_LOSS$/d' "$ALERT_STATE_FILE"
-    sed -i '/^INTERNET_OFFLINE$/d' "$ALERT_STATE_FILE"
-    echo "Internet Status: ONLINE" >> "$LOG"
+    log "Internet Status: ONLINE"
+    clear_alert "INTERNET_OFFLINE" "INTERNET CONNECTION RESTORED"
+    clear_alert "PACKET_LOSS" "PACKET LOSS RESOLVED"
+    clear_alert "HIGH_LATENCY" "LATENCY BACK TO NORMAL"
 fi
 
-if getent hosts google.com > /dev/null; then
-   DNS_STATUS="ONLINE"
-   sed -i '/^DNS_FAILURE$/d' "$ALERT_STATE_FILE"
-   echo "DNS Status: ONLINE" >> "$LOG"
+# --- DNS --------------------------------------------------------------------
+if getent hosts "$DNS_TEST_HOST" > /dev/null; then
+    DNS_STATUS="ONLINE"
+    log "DNS Status: ONLINE"
+    clear_alert "DNS_FAILURE" "DNS RESOLUTION WORKING AGAIN"
 else
-   DNS_STATUS="OFFLINE"
-   echo "DNS Status: ALERT - DNS RESOLUTION FAILED" >> "$LOG"
-   log_alert "DNS_FAILURE" "DNS RESOLUTION FAILED"
+    DNS_STATUS="OFFLINE"
+    log "DNS Status: ALERT - DNS RESOLUTION FAILED"
+    raise_alert "DNS_FAILURE" "DNS RESOLUTION FAILED ($DNS_TEST_HOST)"
 fi
 
-echo "Check completed." >> "$LOG"
-echo " " >> "$LOG"
-
-# Automatic network fault diagnosis
-if [[ "$GATEWAY_STATUS" == "Offline" ]]; then
-   echo "Diagnosis: LOCAL NETWORK FAILURE - Gatway unreachable" >> "$LOG"
+# --- Automatic fault diagnosis ----------------------------------------------
+# Checked from the bottom of the stack up: a gateway failure explains
+# Internet and DNS failures, an Internet outage explains a DNS failure.
+if [[ "$GATEWAY_STATUS" == "OFFLINE" && "$INTERNET_STATUS" == "OFFLINE" ]]; then
+    log "Diagnosis: LOCAL NETWORK FAILURE - Gateway unreachable"
+elif [[ "$GATEWAY_STATUS" == "OFFLINE" ]]; then
+    log "Diagnosis: GATEWAY NOT ANSWERING PING - Internet still reachable (gateway may be dropping ICMP)"
 elif [[ "$INTERNET_STATUS" == "OFFLINE" ]]; then
-   echo "Diagnosis: INTERNET OUTAGE - Gateway reachable but Internet unavailable" >> "$LOG"
+    log "Diagnosis: INTERNET OUTAGE - Gateway reachable but Internet unavailable"
 elif [[ "$INTERNET_STATUS" == "DEGRADED" ]]; then
-   echo "Diagnosis: INTERNET PERFORMANCE ISSUE - Packet loss or high latency" >> "$LOG"
+    log "Diagnosis: INTERNET PERFORMANCE ISSUE - Packet loss or high latency"
 elif [[ "$DNS_STATUS" == "OFFLINE" ]]; then
-   echo "Diagnosis: DNS FAILURE - Unable to resolve domain names" >> "$LOG"
+    log "Diagnosis: DNS FAILURE - Unable to resolve domain names"
 else
-   echo "Diagnosis: NETWORK HEALTHY - All checks passed" >> "$LOG"
+    log "Diagnosis: NETWORK HEALTHY - All checks passed"
 fi
 
-# Internet uptime tracking
+log "Check completed."
+log " "
+
+# --- History for reports and dashboard ---------------------------------------
+# Uptime: DEGRADED still counts as available; only a full outage is downtime.
 if [[ "$INTERNET_STATUS" == "OFFLINE" ]]; then
-   echo "$(date '+%Y-%m-%d %H:%M:%S'),OFFLINE" >> "$UPTIME_LOG"
+    echo "$NOW,OFFLINE" >> "$UPTIME_LOG"
 else
-   echo "$(date '+%Y-%m-%d %H:%M:%S'),ONLINE" >> "$UPTIME_LOG"
+    echo "$NOW,ONLINE" >> "$UPTIME_LOG"
 fi
 
-# Historical network performance tracking
-echo "$(date '+%Y-%m-%d %H:%M:%S'),${LOSS},${AVG}" >> "$PERFORMANCE_LOG"
+# Performance: timestamp, packet loss %, average latency ms (empty if no replies)
+echo "$NOW,$LOSS,$AVG" >> "$PERFORMANCE_LOG"
