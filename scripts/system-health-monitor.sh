@@ -26,7 +26,7 @@ CPU_USAGE=$((100 * ((TOTAL2 - TOTAL1) - (IDLE2 - IDLE1)) / (TOTAL2 - TOTAL1)))
 MEMORY_USAGE=$(free | awk '/^Mem:/ {printf "%.0f", ($2 - $7) / $2 * 100}')
 
 # Disk: usage of the root filesystem, without the % sign
-DISK_USAGE=$(df --output=pcent / | tail -1 | tr -dc '0-9')
+DISK_USAGE=$(df --output=pcent / | tail -n 1 | tr -dc '0-9')
 
 echo "===== SYSTEM HEALTH REPORT ====="
 echo "CPU Usage: $CPU_USAGE%"

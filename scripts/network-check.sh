@@ -81,7 +81,7 @@ AVG=$(echo "$RESULT" | awk -F/ '/^(rtt|round-trip)/ {print $5}')
 # and prints no statistics line. That is a total outage, not a parse failure.
 if [[ -z "$LOSS" ]]; then
     LOSS=100
-    log "Internet Ping Error: $(echo "$RESULT" | head -1)"
+    log "Internet Ping Error: $(echo "$RESULT" | head -n 1)"
 fi
 
 log "Internet Packet Loss: $LOSS%"
